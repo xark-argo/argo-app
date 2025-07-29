@@ -23,9 +23,13 @@ jobs:
         run: |
           set -euo pipefail
           URL="https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-amd64-pyi.zip"
+          
           echo "Downloading $URL"
           curl -L --fail -o argo.zip "$URL"
           unzip -o argo.zip -d src/argo
+          
+          echo "Cleaning up ZIP file..."
+          rm -f argo.zip
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -129,8 +133,8 @@ jobs:
     steps:
       - name: Download ZIP from GitHub Release
         run: |
-          curl -L --fail -o ./argo-darwin-amd64.zip "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-amd64.zip"
-          curl -L --fail -o ./RELEASES-darwin-x64.json "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/RELEASES-darwin-x64.json"
+          curl -L --fail -o ./argo-darwin-amd64.zip "https://github.com/xark-argo/argo-app/releases/download/${{ github.event.release.tag_name }}/argo-darwin-amd64.zip"
+          curl -L --fail -o ./RELEASES-darwin-x64.json "https://github.com/xark-argo/argo-app/releases/download/${{ github.event.release.tag_name }}/RELEASES-darwin-x64.json"
 
       - name: Notarize ZIP
         run: |

@@ -23,9 +23,13 @@ jobs:
         run: |
           set -euo pipefail
           URL="https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-arm64-pyi.zip"
+          
           echo "Downloading $URL"
           curl -L --fail -o argo.zip "$URL"
           unzip -o argo.zip -d src/argo
+          
+          echo "Cleaning up ZIP file..."
+          rm -f argo.zip
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -64,13 +68,13 @@ jobs:
 
       - name: Rename ZIP
         run: |
-          mv ./out/make/zip/darwin/x64/argo-darwin-x64-${{ steps.pkg_version.outputs.version }}.zip ./out/argo-darwin-arm64.zip
+          mv ./out/make/zip/darwin/arm64/argo-darwin-arm64-${{ steps.pkg_version.outputs.version }}.zip ./out/argo-darwin-arm64.zip
 
       - name: Build DMG
         shell: bash
         run: |
           chmod +x scripts/build_dmg.sh
-          ./scripts/build_dmg.sh ./out/argo-darwin-x64/argo.app ./out/argo-darwin-arm64.dmg
+          ./scripts/build_dmg.sh ./out/argo-darwin-arm64/argo.app ./out/argo-darwin-arm64.dmg
 
       - name: Upload DMG and ZIP to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -129,8 +133,8 @@ jobs:
     steps:
       - name: Download ZIP from GitHub Release
         run: |
-          curl -L --fail -o ./argo-darwin-arm64.zip "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-arm64.zip"
-          curl -L --fail -o ./RELEASES-darwin-arm64.json "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/RELEASES-darwin-arm64.json"
+          curl -L --fail -o ./argo-darwin-arm64.zip "https://github.com/xark-argo/argo-app/releases/download/${{ github.event.release.tag_name }}/argo-darwin-arm64.zip"
+          curl -L --fail -o ./RELEASES-darwin-arm64.json "https://github.com/xark-argo/argo-app/releases/download/${{ github.event.release.tag_name }}/RELEASES-darwin-arm64.json"
 
       - name: Notarize ZIP
         run: |

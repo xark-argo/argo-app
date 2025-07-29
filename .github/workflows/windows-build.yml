@@ -78,7 +78,7 @@ jobs:
           cp "./out/make/squirrel.windows/x64/RELEASES" "$PKG_DIR/"
           
           echo "Downloading argo-update-win-x64.zip from GitHub..."
-          ZIP_URL="https://github.com/user-attachments/files/21479923/argo-update-win-x64.zip"
+          ZIP_URL="https://shencha-model-platform.oss-cn-shanghai.aliyuncs.com/argo/dependences/materiel/argo-update-win-x64.zip"
           ZIP_FILE="build/argo/argo-update-win-x64.zip"
       
           curl -L --fail -o "$ZIP_FILE" "$ZIP_URL"
