@@ -1,0 +1,16 @@
+{
+  "Minimize to tray": "Minimize to tray",
+  "Exit the program": "Exit the program",
+  "Please select the operation to be performed:": "Please select the operation to be performed:",
+  "Operate Confirm": "Operate Confirm",
+  "Remember my choice": "Remember my choice",
+  "Close": "Close",
+  "Command execution failed, error:": "Command execution failed, error:",
+  "Open Argo": "Open Argo",
+  "Open Browser": "Open Browser",
+  "Open the log directory": "Open the log directory",
+  "A new version": "A new version has been downloaded. Restart the application to apply the updates.",
+  "Some content will take effect after restart. Do you want to restart the software now?": "Some content will take effect after restart. Do you want to restart the software now?",
+  "Confirm": "Confirm",
+  "Cancel": "Cancel"
+}

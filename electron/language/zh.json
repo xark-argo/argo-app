@@ -1,0 +1,22 @@
+{
+  "The new version {{version}} has started to download": "新版本{{version}}已开始下载",
+  "You can view update content and download progress in Settings - About Us": "可在设置-关于我们 中查看更新内容和下载进度",
+  "Restart and update to the new version": "重启更新新版本",
+  "Minimize to tray": "最小化到托盘",
+  "Exit the program": "退出程序",
+  "Please select the operation to be performed:": "请选择要执行的操作：",
+  "Operate Confirm": "操作确认",
+  "Remember my choice": "记住我的选择",
+  "Close": "关闭",
+  "Later": "稍后",
+  "Restart": "重新启动",
+  "Command execution failed, error:": "命令执行失败，错误：",
+  "Open Argo": "打开 Argo",
+  "Open Browser": "打开浏览器",
+  "Open the log directory": "打开日志目录",
+  "A new version": "一个新版本已被下载，请重新启动应用程序以应用更新。",
+  "Some content will take effect after restart. Do you want to restart the software now?": "部分内容需要重启后生效，是否现在重启软件?",
+  "Confirm": "确认",
+  "OK": "确定",
+  "Cancel": "取消"
+}

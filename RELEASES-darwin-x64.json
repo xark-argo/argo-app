@@ -1,0 +1,15 @@
+{
+	"currentRelease": "0.3.1",
+	"releases": [
+		{
+			"version": "0.3.1",
+			"updateTo": {
+				"version": "0.3.1",
+				"pub_date": "2025-06-20T19:00:00+01:00",
+				"notes": "Theses are some more release notes innit",
+				"name": "argo0.3.1",
+				"url": "https://github.com/xark-argo/argo/releases/download/v0.3.1/argo-darwin-intel.zip"
+			}
+		}
+	]
+}

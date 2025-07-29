@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style type="">
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+    .loading {
+      width: 100%;
+      height: 100%;
+      background: url('./loading.png') no-repeat center / 100% 100%;
+    }
+
+    .progresswrap {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .loadingtext {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 18px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .progress {
+      width: 300px;
+      height: 9px;
+      border-radius: 20px;
+      background: rgba(239, 239, 239, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .current {
+      background: linear-gradient(104.04deg, #0D43B9 0%, #0D5EFF 49.71%, #CBFFFB 100%);
+      height: 100%;
+      width: 10px;
+      border-radius: 20px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading">
+    <div class="progresswrap">
+      <div class="loadingtext">Loading...</div>
+      <div class="progress">
+        <div class="current" id="curProgress"></div>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+  // const currentClass = document.getElementsByClassName('current')
+  function simulateProgress() {
+    const progressBar = document.getElementById('curProgress');
+    let progress = 0;
+    
+    // 第一阶段：快速加载到 90%
+    const fastInterval = setInterval(() => {
+      progress += Math.random() * 5 + 1; // 每次增加 1-6%
+      if (progress >= 80) {
+          clearInterval(fastInterval);
+          startSlowPhase();
+      }
+      progressBar.style.width = Math.min(progress, 80) + '%';
+    }, 50);
+
+    // 第二阶段：慢速加载到 100%
+    async function startSlowPhase() {
+      let slowProgress = 80;
+      const slowInterval = setInterval(() => {
+          slowProgress += Math.random() * 0.5; // 每次增加 0-0.5%
+          if (slowProgress >= 98) {
+            clearInterval(slowInterval);
+            progressBar.style.width = '98%';
+            return;
+          }
+          progressBar.style.width = slowProgress + '%';
+      }, 500);
+      waitingForNotice()
+
+    }
+
+    function waitingForNotice() {
+      window.argoBridge.loadingCompleted(() => {
+        progressBar.style.width = '100%'
+      })
+    }
+}
+
+// 开始模拟
+simulateProgress();
+</script>
+</html>

@@ -1,0 +1,272 @@
+<project>
+    <shortName>argo</shortName>
+    <fullName>argo</fullName>
+    <version>1.0</version>
+    <leftImage>icons/argo_installer.png</leftImage>
+    <logoImage>icons/argo_icon_logo.png</logoImage>
+    <splashImage>icons/argo_installer.png</splashImage>
+    <installationScope>user</installationScope>
+    <componentList>
+        <component>
+            <name>default</name>
+            <description>Default Component</description>
+            <canBeEdited>1</canBeEdited>
+            <selected>1</selected>
+            <show>1</show>
+            <preInstallationActionList>
+                <setInstallerVariable>
+                    <name>windows_folder_common_desktopdirectory</name>
+                    <value>${user_home_directory}/Desktop</value>
+                </setInstallerVariable>
+                <setInstallerVariable>
+                    <name>ollama_install_path</name>
+                    <value>${user_home_directory}\AppData\Local\Programs\Ollama</value>
+                </setInstallerVariable>
+                <setInstallerVariableFromScriptOutput>
+                    <name>user_country</name>
+                    <exec>curl</exec>
+                    <execArgs>-s https://ipinfo.io/country</execArgs>
+                    <abortOnError>0</abortOnError>
+                    <showMessageOnError>0</showMessageOnError>
+                </setInstallerVariableFromScriptOutput>
+                <setInstallerVariable>
+                    <name>otype</name>
+                    <value>install_start</value>
+                </setInstallerVariable>
+                <include file="report_action.xml"/>
+            </preInstallationActionList>
+            <desktopShortcutList>
+                <shortcut>
+                    <comment>argo</comment>
+                    <name>argo</name>
+                    <icon>${installdir}/argo/resources/icons/argo.ico</icon>
+                    <runAsAdmin>1</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}/argo/argo.exe</windowsExec>
+                    <windowsIcon>${installdir}/argo/resources/icons/argo.ico</windowsIcon>
+                    <windowsPath>${installdir}/argo/app-0.2.0</windowsPath>
+                </shortcut>
+            </desktopShortcutList>
+            <folderList>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}</destination>
+                    <name>programfiles</name>
+                    <platforms>all</platforms>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}</destination>
+                    <name>programfileswindows</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory origin="build/argo"/>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}/argo/resources/icons</destination>
+                    <name>imagesfiles</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>icons/argo.ico</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+        </component>
+    </componentList>
+    <readyToInstallActionList>
+        <actionGroup>
+            <actionList>
+                <httpGet>
+                    <abortOnError>0</abortOnError>
+                    <showMessageOnError>0</showMessageOnError>
+                    <url>http://localhost:11434</url>
+                </httpGet>
+                <setInstallerVariable>
+                    <name>ollama_service_exist</name>
+                    <value>1</value>
+                    <ruleList>
+                        <compareText logic="equals" text="${installer_http_code}" value="200"/>
+                    </ruleList>
+                </setInstallerVariable>
+                <setInstallerVariable>
+                    <name>ollama_service_exist</name>
+                    <value>1</value>
+                    <ruleList>
+                        <fileExists>
+                            <path>${ollama_install_path}\ollama app.exe</path>
+                        </fileExists>
+                    </ruleList>
+                </setInstallerVariable>
+                <setInstallerVariable>
+                    <name>installer_error_message_original</name>
+                    <value></value>
+                </setInstallerVariable>
+            </actionList>
+            <ruleList>
+                <isTrue value="${install_ollama_check}"/>
+            </ruleList>
+        </actionGroup>
+    </readyToInstallActionList>
+    <postInstallationActionList>
+        <actionGroup>
+            <actionList>
+                <if>
+                    <conditionRuleList>
+                        <regExMatch>
+                            <logic>matches</logic>
+                            <pattern>CN|HK</pattern>
+                            <text>${user_country}</text>
+                        </regExMatch>
+                    </conditionRuleList>
+                    <actionList>
+                        <setInstallerVariable>
+                            <name>ollama_download_url</name>
+                            <value>https://shencha-model-platform.oss-cn-shanghai.aliyuncs.com/argo/OllamaSetup-v0.9.6.exe</value>
+                        </setInstallerVariable>
+                    </actionList>
+                    <elseActionList>
+                        <setInstallerVariable>
+                            <name>ollama_download_url</name>
+                            <value>https://github.com/ollama/ollama/releases/download/v0.9.6/OllamaSetup.exe</value>
+                        </setInstallerVariable>
+                    </elseActionList>
+                </if>
+                <setInstallerVariable>
+                    <name>otype</name>
+                    <value>download_ollama</value>
+                </setInstallerVariable>
+                <include file="report_action.xml"/>
+
+                <showProgressDialog>
+                    <title>Downloading Ollama</title>
+                    <width>440</width>
+                    <height>100</height>
+                    <actionList>
+                        <httpGet>
+                            <abortOnError>0</abortOnError>
+                            <showMessageOnError>1</showMessageOnError>
+                            <filename>${installdir}\OllamaSetup.exe</filename>
+                            <url>${ollama_download_url}</url>
+                            <customErrorMessage>
+                                ${installer_error_message_original}
+
+                                Please check your internet connection and try again. If the issue persists, manually download Ollama from the following link:
+                                https://ollama.com/download
+                            </customErrorMessage>
+                            <onErrorActionList>
+                                <deleteFile path="${installdir}\OllamaSetup.exe"/>
+                            </onErrorActionList>
+                        </httpGet>
+                    </actionList>
+                </showProgressDialog>
+                <runProgram>
+                    <abortOnError>0</abortOnError>
+                    <showMessageOnError>0</showMessageOnError>
+                    <program>${installdir}\OllamaSetup.exe</program>
+                    <programArguments>/SILENT</programArguments>
+                    <ruleList>
+                        <fileExists>
+                            <path>${installdir}\OllamaSetup.exe</path>
+                        </fileExists>
+                    </ruleList>
+                </runProgram>
+            </actionList>
+            <ruleList>
+                <isTrue value="${install_ollama_check}"/>
+                <isFalse value="${ollama_service_exist}"/>
+            </ruleList>
+        </actionGroup>
+        <if>
+            <conditionRuleList>
+                <isTrue value="${install_ollama_check}"/>
+                <isFalse value="${ollama_service_exist}"/>
+            </conditionRuleList>
+            <actionList>
+                <setInstallerVariable>
+                    <name>otype</name>
+                    <value>installed_ollama</value>
+                </setInstallerVariable>
+            </actionList>
+            <elseActionList>
+                <setInstallerVariable>
+                    <name>otype</name>
+                    <value>noinstalled_ollama</value>
+                </setInstallerVariable>
+            </elseActionList>
+        </if>
+        <setInstallerVariableFromRegEx>
+            <name>error_message</name>
+            <pattern>\n|\r</pattern>
+            <substitution>\\n</substitution>
+            <text>${installer_error_message_original}</text>
+        </setInstallerVariableFromRegEx>
+        <include file="report_action.xml"/>
+    </postInstallationActionList>
+    <finalPageActionList>
+        <actionGroup>
+            <show>0</show>
+            <actionList>
+                <setInstallerVariable>
+                    <name>installer_error_message_original</name>
+                    <value></value>
+                </setInstallerVariable>
+                <runProgram>
+                    <abortOnError>0</abortOnError>
+                    <showMessageOnError>0</showMessageOnError>
+                    <program>${installdir}/argo/argo.exe</program>
+                    <programArguments>&amp;</programArguments>
+                </runProgram>
+                <setInstallerVariable>
+                    <name>otype</name>
+                    <value>installed_argo</value>
+                </setInstallerVariable>
+                <setInstallerVariableFromRegEx>
+                    <name>error_message</name>
+                    <pattern>\n|\r</pattern>
+                    <substitution>\\n</substitution>
+                    <text>${installer_error_message_original}</text>
+                </setInstallerVariableFromRegEx>
+                <include file="report_action.xml"/>
+            </actionList>
+        </actionGroup>
+    </finalPageActionList>
+    <componentsDirectory>${installdir}</componentsDirectory>
+    <createUninstaller>0</createUninstaller>
+    <enableDebugger>1</enableDebugger>
+    <enableRollback>1</enableRollback>
+    <enableSslSupport>1</enableSslSupport>
+    <enableTimestamp>1</enableTimestamp>
+    <saveRelativePaths>1</saveRelativePaths>
+    <vendor>non-zero</vendor>
+    <parameterList>
+        <booleanParameter>
+            <name>install_ollama_check</name>
+            <title>Install Ollama</title>
+            <description>Do you want to install Ollama? Ollama is essential for the proper functioning of this application.Without it, you won't be able to use LLM locally. If you haven’t installed it yet, please select ‘Yes’ to proceed.
+Default ollama address: http://localhost:11434
+            </description>
+            <default>1</default>
+        </booleanParameter>
+        <directoryParameter>
+            <name>installdir</name>
+            <description>Installer.Parameter.installdir.description</description>
+            <explanation>Installer.Parameter.installdir.explanation</explanation>
+            <default>${platform_install_prefix}</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <ask>yes</ask>
+            <cliOptionName>prefix</cliOptionName>
+            <mustBeWritable>yes</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>30</width>
+        </directoryParameter>
+    </parameterList>
+</project>
+
+
+
+
+

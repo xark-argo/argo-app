@@ -1,0 +1,109 @@
+name: Package and Release (windows-amd64)
+
+on:
+  release:
+    types:
+      - released
+
+permissions:
+  contents: write
+
+env:
+  IB_URL: https://releases.installbuilder.com/installbuilder/installbuilder-enterprise-24.3.0-windows-x64-installer.exe
+
+jobs:
+  build:
+    name: Build packages
+    runs-on: windows-2022
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download argo binary
+        run: |
+          URL="https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-windows-amd64-pyi.zip"
+          echo "Downloading $URL"
+          curl -L --fail -o src/argo.zip "$URL"
+        shell: bash
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Read version from package.json
+        id: pkg_version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          yarn install
+          npm run build
+          cp -r dist ../
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build Electron app
+        run: yarn make --arch x64
+
+      - name: Setup InstallBuilder
+        shell: bash
+        run: |
+          curl -k -L ${{ env.IB_URL }} --output ib.exe
+          ./ib.exe --mode unattended --prefix ../ib
+          ../ib/bin/builder-cli.exe --version
+
+      - name: Prepare Windows installer directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=${{ steps.pkg_version.outputs.version }}
+          APP_DIR="build/argo/app-${VERSION}"
+          PKG_DIR="build/argo/packages"
+          
+          mkdir -p "$APP_DIR"
+          mkdir -p "$PKG_DIR"
+          
+          echo "Extracting Electron ZIP..."
+          7z x "./out/make/zip/win32/x64/argo-win32-x64-${VERSION}.zip" -o"$APP_DIR" -y
+      
+          echo "Copying RELEASES file..."
+          cp "./out/make/squirrel.windows/x64/RELEASES" "$PKG_DIR/"
+          
+          echo "Downloading argo-update-win-x64.zip from GitHub..."
+          ZIP_URL="https://github.com/user-attachments/files/21479923/argo-update-win-x64.zip"
+          ZIP_FILE="build/argo/argo-update-win-x64.zip"
+      
+          curl -L --fail -o "$ZIP_FILE" "$ZIP_URL"
+      
+          echo "Extracting argo.exe and Update.exe..."
+          7z x "$ZIP_FILE" -o"build/argo" -y
+          
+          echo "Cleaning up ZIP file..."
+          rm -f "$ZIP_FILE"
+
+      - name: Create installer
+        shell: bash
+        run: |
+          ../ib/bin/builder-cli.exe build argo_installbuilder_win32.xml \
+              --setvars project.outputDirectory=./out \
+              --setvars project.version=${{ steps.pkg_version.outputs.version }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          repository: xark-argo/argo
+          files: |
+            ./out/argo-windows-x64-installer.exe
+            ./out/make/squirrel.windows/x64/RELEASES
+            ./out/make/squirrel.windows/x64/argo-${{ steps.pkg_version.outputs.version }}-full.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}

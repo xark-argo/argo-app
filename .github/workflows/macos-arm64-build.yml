@@ -1,0 +1,161 @@
+name: Package and Release (macos-arm64)
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Packages
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download argo binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-arm64-pyi.zip"
+          echo "Downloading $URL"
+          curl -L --fail -o argo.zip "$URL"
+          unzip -o argo.zip -d src/argo
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Read version from package.json
+        id: pkg_version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          yarn install
+          npm run build
+          cp -r dist ../
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Add macOS certificates
+        run: chmod +x add-osx-cert.sh && ./add-osx-cert.sh
+        env:
+          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+
+      - name: Build Electron app
+        run: yarn make
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+
+      - name: Rename ZIP
+        run: |
+          mv ./out/make/zip/darwin/x64/argo-darwin-x64-${{ steps.pkg_version.outputs.version }}.zip ./out/argo-darwin-arm64.zip
+
+      - name: Build DMG
+        shell: bash
+        run: |
+          chmod +x scripts/build_dmg.sh
+          ./scripts/build_dmg.sh ./out/argo-darwin-x64/argo.app ./out/argo-darwin-arm64.dmg
+
+      - name: Upload DMG and ZIP to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            ./out/argo-darwin-arm64.dmg
+            ./out/argo-darwin-arm64.zip
+            ./RELEASES-darwin-arm64.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+  notarize-dmg:
+    name: Notarize DMG
+    needs: build
+    runs-on: macos-14
+
+    steps:
+      - name: Download DMG from GitHub Release
+        run: |
+          curl -L --fail -o ./argo-darwin-arm64.dmg "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-arm64.dmg"
+
+      - name: Notarize DMG
+        run: |
+          xcrun notarytool submit -v ./argo-darwin-arm64.dmg \
+            --apple-id "${{ secrets.APPLE_ID }}" \
+            --password "${{ secrets.APPLE_ID_PASSWORD }}" \
+            --team-id "${{ secrets.APPLE_TEAM_ID }}" \
+            --wait --output-format json > notary_result-dmg.json
+
+      - name: Check Notarization Result
+        run: |
+          status=$(jq -r '.status' notary_result-dmg.json)
+          echo "DMG notarization status: $status"
+          if [[ "$status" != "Accepted" ]]; then
+            echo "Notarization failed or incomplete."
+            exit 1
+          fi
+          xcrun stapler staple ./argo-darwin-arm64.dmg
+
+      - name: Upload notarized DMG and result to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          repository: xark-argo/argo
+          files: |
+            ./argo-darwin-arm64.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+  notarize-zip:
+    name: Notarize ZIP
+    needs: build
+    runs-on: macos-14
+
+    steps:
+      - name: Download ZIP from GitHub Release
+        run: |
+          curl -L --fail -o ./argo-darwin-arm64.zip "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-arm64.zip"
+          curl -L --fail -o ./RELEASES-darwin-arm64.json "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/RELEASES-darwin-arm64.json"
+
+      - name: Notarize ZIP
+        run: |
+          xcrun notarytool submit -v ./argo-darwin-arm64.zip \
+            --apple-id "${{ secrets.APPLE_ID }}" \
+            --password "${{ secrets.APPLE_ID_PASSWORD }}" \
+            --team-id "${{ secrets.APPLE_TEAM_ID }}" \
+            --wait --output-format json > notary_result-zip.json
+
+      - name: Check Notarization Result
+        run: |
+          status=$(jq -r '.status' notary_result-zip.json)
+          echo "ZIP notarization status: $status"
+          if [[ "$status" != "Accepted" ]]; then
+            echo "Notarization failed or incomplete."
+            exit 1
+          fi
+
+      - name: Upload notarized ZIP and result to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          repository: xark-argo/argo
+          files: |
+            ./argo-darwin-arm64.zip
+            ./RELEASES-darwin-arm64.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}

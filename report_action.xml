@@ -1,0 +1,44 @@
+<httpPost>
+    <abortOnError>0</abortOnError>
+    <showMessageOnError>0</showMessageOnError>
+    <url>https://api.xark-argo.com/stat/action</url>
+    <contentType>application/json</contentType>
+    <data><![CDATA[
+        {
+            "h_app": "argo-community",
+            "h_m": 0,
+            "token": "",
+            "h_av": "0.1.7",
+            "h_dt": 0,
+            "h_did": "${installation_guid}",
+            "list": [{
+                "action": "install",
+                "otype": "${otype}",
+                "id": "${installation_guid}",
+                "oid": "",
+                "src": "installbuilder",
+                "data": {
+                    "user_country": "${user_country}",
+                    "platform_name": "${platform_name}",
+                    "error_message": "${error_message.unix}",
+                    "system_locale": "${system_locale}",
+                    "installdir": "${installdir.unix}",
+                    "machine_ipaddr": "${machine_ipaddr}",
+                    "machine_total_memory": "${machine_total_memory}",
+                    "machine_cpu_count": "${machine_cpu_count}",
+                    "machine_cpu_speed": "${machine_cpu_speed}",
+                    "machine_swap_memory": "${machine_swap_memory}",
+                    "platform_has_smp": "${platform_has_smp}",
+                    "system_username": "${system_username}",
+                    "platform_exec_suffix": "${platform_exec_suffix}",
+                    "installer_installation_log": "${installer_installation_log.unix}",
+                    "windows_os_version_number": "${windows_os_version_number}",
+                    "osx_version":"${osx_version}",
+                    "ollama_download_url": "${ollama_download_url}"
+                }
+            }]
+        }]]>
+    </data>
+    <timeout>5000</timeout>
+</httpPost>
+
