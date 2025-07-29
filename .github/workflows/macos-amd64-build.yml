@@ -95,7 +95,7 @@ jobs:
     steps:
       - name: Download DMG from GitHub Release
         run: |
-          curl -L --fail -o ./argo-darwin-amd64.dmg "https://github.com/xark-argo/argo/releases/download/${{ github.event.release.tag_name }}/argo-darwin-amd64.dmg"
+          curl -L --fail -o ./argo-darwin-amd64.dmg "https://github.com/xark-argo/argo-app/releases/download/${{ github.event.release.tag_name }}/argo-darwin-amd64.dmg"
 
       - name: Notarize DMG
         run: |

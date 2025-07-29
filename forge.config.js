@@ -5,6 +5,7 @@ module.exports = {
         /^\/?out\//,
         /^\/?\.git/,
         /^\/?\.idea/,
+        /^\/?frontend\//,
         /^\/?.*\.sh$/,
         /^\/?.*\.yml$/,
         /^\/?.*\.xml$/,
