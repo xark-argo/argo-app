@@ -10,7 +10,7 @@ permissions:
 jobs:
   build:
     name: Build Packages
-    runs-on: macos-13-xlarge
+    runs-on: macos-14-xlarge
 
     steps:
       - name: Checkout repository
@@ -90,7 +90,7 @@ jobs:
   notarize-dmg:
     name: Notarize DMG
     needs: build
-    runs-on: macos-13-xlarge
+    runs-on: macos-14-xlarge
 
     steps:
       - name: Download DMG from GitHub Release
@@ -128,7 +128,7 @@ jobs:
   notarize-zip:
     name: Notarize ZIP
     needs: build
-    runs-on: macos-13-xlarge
+    runs-on: macos-14-xlarge
 
     steps:
       - name: Download ZIP from GitHub Release
