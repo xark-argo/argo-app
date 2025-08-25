@@ -1,7 +1,7 @@
 {
   "name": "argo",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "xark",
   "description": "xx",
   "main": "./electron/main.js",

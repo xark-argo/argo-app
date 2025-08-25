@@ -17,6 +17,7 @@ const fsExtra = require('fs-extra')
 const extract = require('extract-zip')
 const {URL} = require('url')
 const i18next = require('i18next')
+const {execSync} = require('child_process')
 const {startServer} = require('./node')
 const {getAutoUpdate} = require('./sharedStates')
 const {
@@ -103,6 +104,31 @@ const QUIT_TYPE = {0: 'minimize', 1: 'quit', 2: 'maintain'}
 
 const srcPath = path.join(__dirname, '..', 'src')
 const argoPath = path.join(srcPath, 'argo')
+
+function getOllamaPath() {
+  if (isWindows) {
+    return 'ollama'
+  }
+
+  let globalOllama = null
+
+  try {
+    globalOllama = execSync('which ollama', {stdio: 'pipe'}).toString().trim()
+    if (!fs.existsSync(globalOllama)) {
+      globalOllama = null
+    }
+  } catch (err) {
+    globalOllama = null
+  }
+
+  const localOllama = path.join(srcPath, 'ollama', 'ollama')
+
+  if (!globalOllama) {
+    process.env.PATH = `${process.env.PATH}:${path.dirname(localOllama)}`
+  }
+
+  return globalOllama || localOllama
+}
 
 // if (process.defaultApp) {
 //   if (process.argv.length >= 2) {
@@ -325,17 +351,11 @@ async function runArgo() {
   startServer()
   await extractAndCleanArgoZip()
 
-  const ollamaBinPath = isWindows
-    ? 'ollama'
-    : path.join(srcPath, 'ollama', 'ollama')
-
-  if (!isWindows) {
-    process.env.PATH = `${process.env.PATH}:${path.dirname(ollamaBinPath)}`
-  }
-
   process.env.ARGO_STORAGE_PATH = store.get('customPath')
 
   const argoBinPath = path.join(argoPath, 'argo')
+  const ollamaBinPath = getOllamaPath()
+  console.log('ollamaBinPath', ollamaBinPath)
 
   ollamaProcess = spawn(ollamaBinPath, ['serve'], {
     detached: true,
